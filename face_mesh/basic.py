@@ -7,8 +7,9 @@ pTime = 0
 
 mpDraw = mp.solutions.drawing_utils
 mpFaceMesh = mp.solutions.face_mesh
-faceMesh = mpFaceMesh.FaceMesh(max_num_faces=2)
-drawSpec = mpDraw.DrawingSpec(thickness=1, circle_radius=2)
+mpDrawStyles = mp.solutions.drawing_styles
+mpDrawSpec = mpDraw.DrawingSpec(thickness=1, circle_radius=2)
+faceMesh = mpFaceMesh.FaceMesh(max_num_faces=2, refine_landmarks=True)
 
 while True:
     success, img = cap.read()
@@ -16,9 +17,18 @@ while True:
     # img.flags.writeable = False
     imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     results = faceMesh.process(imgRGB)
+
+    # img.flags.writeable = True
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
     if results.multi_face_landmarks:
         for faceLMs in results.multi_face_landmarks:
-            mpDraw.draw_landmarks(img, faceLMs, mpFaceMesh.FACEMESH_TESSELATION, drawSpec, drawSpec)
+            mpDraw.draw_landmarks(image=img, landmark_list=faceLMs, connections=mpFaceMesh.FACEMESH_TESSELATION,
+                                  landmark_drawing_spec=None, connection_drawing_spec=mpDrawStyles.get_default_face_mesh_tesselation_style())
+            # mpDraw.draw_landmarks(image=img, landmark_list=faceLMs, connections=mpFaceMesh.FACEMESH_CONTOURS,
+            #                       landmark_drawing_spec=None, connection_drawing_spec=mpDrawStyles.get_default_face_mesh_contours_style())
+            # mpDraw.draw_landmarks(image=img, landmark_list=faceLMs, connections=mpFaceMesh.FACEMESH_IRISES,
+            #                       landmark_drawing_spec=None, connection_drawing_spec=mpDrawStyles.get_default_face_mesh_iris_connections_style())
     
         for id, lm in enumerate(faceLMs.landmark):
             ih, iw, ic = img.shape
@@ -30,5 +40,9 @@ while True:
     pTime = cTime
 
     cv2.putText(img, f'FPS: {int(fps)}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
-    cv2.imshow("Image", img)
-    cv2.waitKey(1)
+    cv2.imshow("Mediapipe Face Mesh", img)
+    
+    if cv2.waitKey(5) & 0xFF == 27:
+        break
+    
+cap.release()

@@ -1,3 +1,5 @@
 .vscode
 .DS_STORE
 __pycache__
+
+lip_motion_detection/model/*
