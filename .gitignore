@@ -7,3 +7,5 @@ lip_motion_detection/model/*
 # ncnn_demos
 ncnn_demos/ncnn_src/include/ncnn/*
 ncnn_demos/ncnn_src/lib/*
+
+opencvdnn_yolov5/build
