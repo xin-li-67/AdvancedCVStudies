@@ -1,25 +1,25 @@
 import os
 import pygame
-import numpy as np
 import tkinter.messagebox
 
+import numpy as np
+
 from time import sleep
+from tkinter import Tk
 from random import choice
 from typing import List, Tuple
 from contextlib import suppress
-from tkinter import Tk
 from tkinter.filedialog import askopenfilename
-
-os.environ['SDL_VIDEO_CENTERED'] = '1'
 
 from sudoku import Sudoku
 from gui.button import Button
-from gui.camera_win import CameraWindow
+from gui.camera_window import CameraWindow
 from image_processing.process_image import SudokuImageProcessing
+
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 
 root = Tk()
 root.withdraw()
-
 BLOCK_SIZE = 40
 SCREEN_WIDTH = 650
 SCREEN_HEIGHT = 650
@@ -51,26 +51,24 @@ class SudokuGUI:
     button_AR: Button
 
     def __init__(self, matrix: np.ndarray, box_rows: int = 3, box_cols: int = 3):
-        """default initialization"""
-
         self.BOX_ROWS = box_rows
         self.BOX_COLS = box_cols
         self.NUM_ROWS = self.BOX_ROWS * self.BOX_COLS
         self.NUM_COLUMNS = self.BOX_ROWS * self.BOX_COLS
         self.PLAY_WIDTH = BLOCK_SIZE * self.NUM_COLUMNS
         self.PLAY_HEIGHT = BLOCK_SIZE * self.NUM_ROWS
-        self.TOP_LEFT = (int((SCREEN_WIDTH - self.PLAY_WIDTH) / 2),
-                         int((SCREEN_HEIGHT - self.PLAY_HEIGHT) / 2 - 80))
+        self.TOP_LEFT = (
+            int((SCREEN_WIDTH - self.PLAY_WIDTH) / 2),
+            int((SCREEN_HEIGHT - self.PLAY_HEIGHT) / 2 - 80)
+        )
 
-        # ========================== Game Parameters ===========================
         self.matrix = matrix
         self.init_matrix = self.matrix.copy()
+        
         try:
-            # find the solutions for the given matrix
             self.solution_list = Sudoku(matrix.copy(), box_row=self.BOX_ROWS, box_col=self.BOX_COLS).get_solution()
             self.solution = self.solution_list[0]
         except Exception:
-            # incase no solution show error
             tkinter.messagebox.showerror(title="Error",
                                          message="Solution does not exist or Image not clear, Try Again.")
         
@@ -78,21 +76,14 @@ class SudokuGUI:
         self.selected_box = (0, 0)
         self.locked_pos = self.get_locked_pos()
         self.home_icon = pygame.image.load('.images/home_icon.png')
-        self.button_home = Button(60, 60, 70, 70, (200, 200, 200), '  ')
-        
-        # load image from file button
-        self.button_load_image = Button(162, 510, 250, 60, (200, 200, 200), "Load from File")
-        # load image from camera button
-        self.button_cam_image = Button(488, 510, 250, 60, (200, 200, 200), "Load from Camera")
-        # solve the current puzzle button
-        self.button_solve = Button(325, 590, 250, 60, (200, 200, 200), "Solve")
-        # play game button
-        self.button_play_game = Button(325, 300, 400, 80, (200, 200, 200), "Play Game")
-        # augmented reality button
-        self.button_AR = Button(325, 450, 400, 80, (200, 200, 200), "Augmented Reality")
+        self.button_home = Button(60, 60, 70, 70, (200,200,200), '  ')
+        self.button_load_image = Button(162, 510, 250, 60, (200,200,200), "Load from File")
+        self.button_cam_image = Button(488, 510, 250, 60, (200,200,200), "Load from Camera")
+        self.button_solve = Button(325, 590, 250, 60, (200,200,200), "Solve")
+        self.button_play_game = Button(325, 300, 400, 80, (200,200,200), "Play Game")
+        self.button_AR = Button(325, 450, 400, 80, (200,200,200), "Augmented Reality")
 
     def get_locked_pos(self):
-        """Get list of coordinates of the clues in the given puzzle"""
         locked_pos = []
         
         for i in range(self.NUM_ROWS):
@@ -103,7 +94,6 @@ class SudokuGUI:
         return locked_pos
 
     def draw_window(self, solved: bool = False):
-        """Draw the window for the game"""
         self.window.fill((255, 255, 255))
         font = pygame.font.SysFont('comicsans', 48)
         label = font.render('SUDOKU', 1, (0, 0, 0))
@@ -113,90 +103,61 @@ class SudokuGUI:
         # draw reference grid black lines
         for i in range(self.NUM_ROWS):
             # horizontal lines
-            pygame.draw.line(self.window, (0, 0, 0),
-                             (self.TOP_LEFT[X],
-                              self.TOP_LEFT[Y] + i * BLOCK_SIZE),
-                             (self.TOP_LEFT[X] + self.PLAY_WIDTH,
-                              self.TOP_LEFT[Y] + i * BLOCK_SIZE),
+            pygame.draw.line(self.window, (0,0,0),
+                             (self.TOP_LEFT[X], self.TOP_LEFT[Y] + i * BLOCK_SIZE),
+                             (self.TOP_LEFT[X] + self.PLAY_WIDTH, self.TOP_LEFT[Y] + i * BLOCK_SIZE),
                              4 if i % self.BOX_ROWS == 0 else 1)
         for i in range(self.NUM_COLUMNS):
             # vertical lines
-            pygame.draw.line(self.window, (0, 0, 0),
-                             (self.TOP_LEFT[X] + i * BLOCK_SIZE,
-                              self.TOP_LEFT[Y]),
-                             (self.TOP_LEFT[X] + i * BLOCK_SIZE,
-                              self.TOP_LEFT[Y] + self.PLAY_HEIGHT),
+            pygame.draw.line(self.window, (0,0,0),
+                             (self.TOP_LEFT[X] + i * BLOCK_SIZE, self.TOP_LEFT[Y]),
+                             (self.TOP_LEFT[X] + i * BLOCK_SIZE, self.TOP_LEFT[Y] + self.PLAY_HEIGHT),
                              4 if i % self.BOX_COLS == 0 else 1)
 
         # last horizontal line
-        pygame.draw.line(self.window, (0, 0, 0),
-                         (self.TOP_LEFT[X],
-                          self.TOP_LEFT[Y] + self.NUM_ROWS * BLOCK_SIZE),
-                         (self.TOP_LEFT[X] + self.PLAY_WIDTH,
-                          self.TOP_LEFT[Y] + self.NUM_ROWS * BLOCK_SIZE), 4)
-
+        pygame.draw.line(self.window, (0,0,0),
+                         (self.TOP_LEFT[X], self.TOP_LEFT[Y] + self.NUM_ROWS * BLOCK_SIZE),
+                         (self.TOP_LEFT[X] + self.PLAY_WIDTH, self.TOP_LEFT[Y] + self.NUM_ROWS * BLOCK_SIZE), 4)
         # last vertical line
-        pygame.draw.line(self.window, (0, 0, 0),
-                         (self.TOP_LEFT[X] + self.NUM_COLUMNS * BLOCK_SIZE,
-                          self.TOP_LEFT[Y]),
-                         (self.TOP_LEFT[X] + self.NUM_COLUMNS * BLOCK_SIZE,
-                          self.TOP_LEFT[Y] + self.PLAY_HEIGHT), 4)
+        pygame.draw.line(self.window, (0,0,0),
+                         (self.TOP_LEFT[X] + self.NUM_COLUMNS * BLOCK_SIZE, self.TOP_LEFT[Y]),
+                         (self.TOP_LEFT[X] + self.NUM_COLUMNS * BLOCK_SIZE, self.TOP_LEFT[Y] + self.PLAY_HEIGHT), 4)
 
         # font for the numbers, with different size
         font = pygame.font.SysFont('comicsans', 32)
 
-        # iterate through rows
         for i in range(self.NUM_ROWS):
-            # iterate through columns
             for j in range(self.NUM_COLUMNS):
-                # cell is empty
                 if self.matrix[i, j] == 0:
                     continue
 
-                # if cell contains clue
                 if (i, j) in self.locked_pos:
-                    # the color is black
                     num_color = (0, 0, 0)
-                # if it has been solved
                 elif solved:
-                    # the color is green
                     num_color = (128, 193, 42)
-                # if it is valid value
                 elif Sudoku.element_possible(self.matrix, self.BOX_ROWS, self.BOX_COLS, i, j):
-                    # the color is blue
                     num_color = (89, 154, 252)
-                # if it is an invalid value
                 else:
-                    # color is red
                     num_color = (255, 0, 0)
 
-                # generate label for the value
                 label = font.render(str(self.matrix[i, j]), 1, num_color)
-                # display label on screen
                 self.window.blit(label,
                                  (self.TOP_LEFT[X] + j * BLOCK_SIZE - label.get_width() / 2 + BLOCK_SIZE / 2,
                                   self.TOP_LEFT[Y] + i * BLOCK_SIZE - label.get_height() / 2 + BLOCK_SIZE / 2))
 
         # higlight border of the selected box
-        pygame.draw.rect(self.window, (100, 178, 255),
-                         (self.TOP_LEFT[X] + self.selected_box[0] * BLOCK_SIZE,
-                          self.TOP_LEFT[Y] + self.selected_box[1] * BLOCK_SIZE,
+        pygame.draw.rect(self.window, (100,178,255),
+                         (self.TOP_LEFT[X] + self.selected_box[0] * BLOCK_SIZE, self.TOP_LEFT[Y] + self.selected_box[1] * BLOCK_SIZE,
                           BLOCK_SIZE, BLOCK_SIZE), 4)
 
-        # display the home button
         self.button_home.draw(self.window)
-        # display the icon on the home button
         self.window.blit(self.home_icon,
-                         (self.button_home.x - self.home_icon.get_width() / 2,
-                          self.button_home.y - self.home_icon.get_height() / 2))
+                         (self.button_home.x - self.home_icon.get_width() / 2, self.button_home.y - self.home_icon.get_height() / 2))
 
-        # display the load from file button
         self.button_load_image.draw(self.window)
-        # display the load from camera button
         self.button_cam_image.draw(self.window)
-        # display the solve button
         self.button_solve.draw(self.window)
-        # update the display to reflect the above changes
+        
         pygame.display.update()
 
     def handle_click(self, event):
@@ -518,8 +479,11 @@ class SudokuGUI:
 
     def graceful_exit(self):
         """Helper method, it saves the last loaded puzzle and its dimensions before quitting"""
+        # save the current puzzle loaded
         np.save('last_loaded.npy', self.init_matrix)
+        # save the dimensions of the current puzzle
         np.save('last_loaded_dim.npy', np.array([self.BOX_ROWS, self.BOX_COLS]))
-        
+        # exit pygame runtime
         pygame.quit()
+        # exit program
         quit()

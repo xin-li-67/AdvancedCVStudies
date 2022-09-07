@@ -9,3 +9,8 @@ ncnn_demos/ncnn_src/include/ncnn/*
 ncnn_demos/ncnn_src/lib/*
 
 opencvdnn_yolov5/build
+
+# ar_sudoku
+*.zip
+*.pth
+*.tgz

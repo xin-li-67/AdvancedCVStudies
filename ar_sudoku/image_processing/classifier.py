@@ -1,26 +1,51 @@
-import torch
-import torch.nn as nn
-import torchvision.transforms as T
+"""
+  classifier.py         :   This file contains the CNN Classifier for digit recognition.
+  File created by       :   Shashank Goyal
+  Last commit done by   :   Shashank Goyal
+  Last commit date      :   3rd September
+"""
 
+# import sqrt function from math
 from math import sqrt
-from tqdm import tqdm
-from torchvision.datasets import ImageFolder
-from torch.utils.data import random_split
-from torch.utils.data.dataloader import DataLoader
 
-from pytorch_gpu_assist import get_default_device, to_device, DeviceDataLoader
+# import the pytorch module
+import torch
+# import neural-network module from pytorch
+import torch.nn as nn
+# import image tranfomations from torch-vision
+import torchvision.transforms as T
+# import random split function to split the dataset in test-train
+from torch.utils.data import random_split
+# import Dataloader to feed dataset in batches to the neural-network
+from torch.utils.data.dataloader import DataLoader
+# import ImageFolder to use a directory as source for image data
+from torchvision.datasets import ImageFolder
+# import progress bar
+from tqdm import tqdm
+
+# import assistive functions for device selection incase of GPU systems
+from image_processing.pytorch_gpu_assist import get_default_device, to_device, DeviceDataLoader
 
 
 def accuracy(outputs, labels):
-    '''determine accuracy for a set of labels and predicted outputs'''
+    """determine accuracy for a set of labels and predicted outputs"""
+
+    # get max prediction from each row
     _, preds = torch.max(outputs, dim=1)
+    # get average of number of predictions that match the labels
     return torch.tensor(torch.sum(preds == labels).item() / len(preds))
 
 
 class Char74kModel(nn.Module):
+    """Convolution neural network"""
+
     def __init__(self):
+        """default initialization"""
+
+        # call init method from super class
         super().__init__()
 
+        # create sequence of hidden layers
         self.features = nn.Sequential(
             # in: 1 x 28 x 8
             nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1),
@@ -60,9 +85,13 @@ class Char74kModel(nn.Module):
             nn.Linear(512, 10),
         )
 
+        # initialize network weights
         self.init_weights()
-    
+
     def init_weights(self):
+        """initialize weights for each network as follows"""
+
+        # iterate through each feature layer
         for layer in self.features.children():
             # if layer is of type convolution
             if isinstance(layer, nn.Conv2d):
@@ -90,14 +119,19 @@ class Char74kModel(nn.Module):
                 layer.bias.data.zero_()
 
     def forward(self, x):
-        x = self.features(x)
-        x = x.view(x.size(0), -1) # flatten
-        x = self.classifier(x)
+        """method for forward pass"""
 
+        # input to the hidden layer
+        x = self.features(x)
+        # flatten the output
+        x = x.view(x.size(0), -1)
+        # feed it to the classifier
+        x = self.classifier(x)
+        # return output from classifier
         return x
-    
+
     def training_step(self, batch):
-        '''function for an iteration of training process'''
+        """function for an iteration of training process"""
 
         # get images and associated labels for each batch
         images, labels = batch
@@ -111,7 +145,7 @@ class Char74kModel(nn.Module):
         return loss
 
     def validation_step(self, batch):
-        '''function for an iteration of validation process'''
+        """function for an iteration of validation process"""
 
         # get images and associated labels for each batch
         images, labels = batch
@@ -128,7 +162,7 @@ class Char74kModel(nn.Module):
 
     @staticmethod
     def validation_epoch_end(outputs):
-        '''generate net statistics fofr each batch'''
+        """generate net statistics fofr each batch"""
 
         # losses for batch
         batch_losses = [x['val_loss'] for x in outputs]
@@ -143,12 +177,12 @@ class Char74kModel(nn.Module):
 
     @staticmethod
     def epoch_end(epoch, result):
-        '''print formatted string for an epoch'''
-        print('Epoch [{}], val_loss: {:.4f}, val_acc: {:.4f}'.format(epoch, result['val_loss'], result['val_acc']))
+        """print formatted string for an epoch"""
+        print("Epoch [{}], val_loss: {:.4f}, val_acc: {:.4f}".format(epoch, result['val_loss'], result['val_acc']))
 
 
 def evaluate(model, val_loader):
-    '''return metrics of a model for a validation dataset'''
+    """return metrics of a model for a validation dataset"""
 
     # get output for each batch in validatation dataset
     outputs = [model.validation_step(batch) for batch in val_loader]
@@ -157,7 +191,7 @@ def evaluate(model, val_loader):
 
 
 def fit(epochs, model, train_loader, val_loader, lr=0.003):
-    '''fit the model to the train data and get loss and accuracy against the validation data'''
+    """fit the model to the train data and get loss and accuracy against the validation data"""
 
     # empty list
     history = []
@@ -193,7 +227,7 @@ def fit(epochs, model, train_loader, val_loader, lr=0.003):
 
 
 def train_model():
-    '''function to train the model'''
+    """function to train the model"""
 
     # sequence of transformations for tensors
     tfms = T.Compose([
@@ -223,7 +257,7 @@ def train_model():
     # get the default computation device
     device = get_default_device()
     # print the device detected
-    print('Device Found:', device)
+    print("Device Found:", device)
 
     # split the dataset into train and test datasets
     train_ds, val_ds = random_split(dataset, [train_size, val_size], generator=torch.Generator().manual_seed(42))
@@ -242,12 +276,12 @@ def train_model():
     model = to_device(Char74kModel(), device)
 
     # start training
-    print('Training -')
+    print("Training -")
     # train the model for 20 epochs
     fit(20, model, train_loader, val_loader)
     # evaluate model against the validation set
     result = evaluate(model, val_loader)
-    print('(Trained) Model Result = val_loss: {val_loss:.4f}, val_acc: {val_acc:.4f}'.format(**result))
+    print("(Trained) Model Result = val_loss: {val_loss:.4f}, val_acc: {val_acc:.4f}".format(**result))
 
     model_file_name = 'char74k-cnn.pth'
     print("\nModel saved as: '{}'".format(model_file_name))
@@ -256,7 +290,7 @@ def train_model():
 
 
 def eval_loaded_model(model_file_name):
-    '''evaluate loaded model against the complete dataset'''
+    """evaluate loaded model against the complete dataset"""
 
     # sequence of transformations for tensors
     tfms = T.Compose([
@@ -291,15 +325,15 @@ def eval_loaded_model(model_file_name):
 
     # load the model object from the file
     loaded_model = load_model(model_file_name)
-    print('Loaded Model:', model_file_name)
+    print("Loaded Model:", model_file_name)
 
     # evaluate the loaded model against validation dataset as sanity check
     result = evaluate(loaded_model, val_loader)
-    print('(Loaded) Model Result = val_loss: {val_loss:.4f}, val_acc: {val_acc:.4f}'.format(**result))
+    print("(Loaded) Model Result = val_loss: {val_loss:.4f}, val_acc: {val_acc:.4f}".format(**result))
 
 
 def load_model(model_file_name):
-    '''Load model from a file name'''
+    """Load model from a file name"""
 
     # create a model object and move it to the computation device    
     model = to_device(Char74kModel(), get_default_device())

@@ -2,7 +2,7 @@ import torch
 
 
 def get_default_device():
-    '''Pick GPU if available, else CPU'''
+    """Pick GPU if available, else CPU"""
 
     # if NVIDIA GPU is available for computation
     if torch.cuda.is_available():
@@ -14,7 +14,7 @@ def get_default_device():
 
 
 def to_device(data, device):
-    '''Move tensor(s) to chosen device'''
+    """Move tensor(s) to chosen device"""
 
     # if the data is of list or tuple type
     if isinstance(data, (list, tuple)):
@@ -25,10 +25,10 @@ def to_device(data, device):
 
 
 class DeviceDataLoader:
-    '''Wrap a dataloader to move data to a device'''
+    """Wrap a dataloader to move data to a device"""
 
     def __init__(self, dl, device):
-        '''default initialization'''
+        """default initialization"""
 
         # data loader object
         self.dl = dl
@@ -36,7 +36,7 @@ class DeviceDataLoader:
         self.device = device
 
     def __iter__(self):
-        '''Yield a batch of data after moving it to device'''
+        """Yield a batch of data after moving it to device"""
 
         # for each iterable in the data loader object
         for b in self.dl:
@@ -44,5 +44,5 @@ class DeviceDataLoader:
             yield to_device(b, self.device)
 
     def __len__(self):
-        '''Number of batches'''
+        """Number of batches"""
         return len(self.dl)
